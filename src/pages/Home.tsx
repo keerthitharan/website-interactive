@@ -90,7 +90,7 @@ const Home: React.FC = () => {
               About Hardskello
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              With over 15 years of experience in the recruitment industry, we've built our reputation 
+              With over years of experience in the recruitment industry, we've built our reputation 
               on delivering exceptional results for both job seekers and employers across the United States.
             </p>
           </div>
