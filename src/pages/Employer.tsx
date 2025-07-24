@@ -246,7 +246,7 @@ const Employer: React.FC = () => {
                   <div className="w-2 h-2 bg-blue-600 rounded-full mt-3"></div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Proven Track Record</h3>
-                    <p className="text-gray-600">15+ years of successful placements with a 98% client satisfaction rate.</p>
+                    <p className="text-gray-600"> years of successful placements with a 98% client satisfaction rate.</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-4">

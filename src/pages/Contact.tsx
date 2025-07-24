@@ -40,7 +40,7 @@ const Contact: React.FC = () => {
     {
       icon: <MapPin className="h-6 w-6 text-blue-600" />,
       title: 'Office Address',
-      details: ['123 Business Avenue', 'New York, NY 10001', 'United States']
+      details: ['123 Business Avenue', '949 N Plum Grove Rd, Schaumburg, IL 60173, United States', 'United States']
     },
     {
       icon: <Phone className="h-6 w-6 text-blue-600" />,
@@ -61,23 +61,23 @@ const Contact: React.FC = () => {
 
   const offices = [
     {
-      city: 'New York',
-      address: '123 Business Avenue, New York, NY 10001',
-      phone: '+1 (555) 123-4567',
-      email: 'newyork@hardskello.com'
+      city: 'Schaumburg',
+      address: '949 N Plum Grove Rd, Schaumburg, IL 60173, United States',
+      phone: ' +1 847-517-8415',
+      email: 'team@hardskello.com'
     },
-    {
-      city: 'Los Angeles',
-      address: '456 Corporate Blvd, Los Angeles, CA 90210',
-      phone: '+1 (555) 987-6543',
-      email: 'losangeles@hardskello.com'
-    },
-    {
-      city: 'Chicago',
-      address: '789 Professional Street, Chicago, IL 60601',
-      phone: '+1 (555) 456-7890',
-      email: 'chicago@hardskello.com'
-    }
+   // {
+     // city: 'Los Angeles',
+      // address: '456 Corporate Blvd, Los Angeles, CA 90210',
+      //phone: '+1 (555) 987-6543',
+      //email: 'losangeles@hardskello.com'
+    //},
+   //{
+      //city: 'Chicago',
+      //address: '789 Professional Street, Chicago, IL 60601',
+      //phone: '+1 (555) 456-7890',
+      //email: 'chicago@hardskello.com'
+    //}
   ];
 
   return (
@@ -339,7 +339,7 @@ const Contact: React.FC = () => {
               Find Us on the Map
             </h2>
             <p className="text-gray-600">
-              Visit our main office in New York or connect with us virtually.
+              Visit our main office in the United States (Illinois)or connect with us virtually.
             </p>
           </div>
           <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">

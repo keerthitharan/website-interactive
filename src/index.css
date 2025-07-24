@@ -182,7 +182,7 @@ html {
 /* Improved focus states */
 .focus-visible\:ring-4:focus-visible {
   ring-width: 4px;
-  ring-color: rgba(59, 130, 246, 0.3);
+  ring-color:black(59, 130, 246, 0.3);
 }
 
 /* Custom scrollbar */
