@@ -95,10 +95,10 @@ const Employee: React.FC = () => {
             </p>
             <div className="space-x-4">
               <a
-                href="/contact"
+                href="/employee-login"
                 className="inline-block bg-white hover:bg-gray-100 text-blue-600 font-medium py-3 px-8 rounded-lg transition-colors duration-200"
               >
-                Start Your Job Search
+                Employee Login
               </a>
               <a
                 href="#how-it-works"
