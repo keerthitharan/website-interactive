@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Lock, User } from 'lucide-react';
+import { Users, Lock, User, Loader } from 'lucide-react';
+import { signInEmployer, setCurrentEmployer } from '../lib/supabase';
 
 const EmployerLogin: React.FC = () => {
   const [credentials, setCredentials] = useState({
@@ -8,6 +9,7 @@ const EmployerLogin: React.FC = () => {
     password: ''
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -15,18 +17,22 @@ const EmployerLogin: React.FC = () => {
       ...credentials,
       [e.target.name]: e.target.value
     });
+    setError(''); // Clear error when user types
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
     
-    // Simple authentication check (in real app, this would be API call)
-    if (credentials.username === 'employer' && credentials.password === 'admin123') {
-      // Store authentication status
-      localStorage.setItem('isEmployerAuthenticated', 'true');
+    try {
+      const employer = await signInEmployer(credentials.username, credentials.password);
+      setCurrentEmployer(employer);
       navigate('/employer-dashboard');
-    } else {
+    } catch (err) {
       setError('Invalid username or password');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,7 +44,7 @@ const EmployerLogin: React.FC = () => {
             <Users className="h-16 w-16 text-blue-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Employer Portal</h1>
-          <p className="text-gray-600">Sign in to access your dashboard</p>
+          <p className="text-gray-600">Sign in to manage your employees</p>
         </div>
 
         {error && (
@@ -61,7 +67,8 @@ const EmployerLogin: React.FC = () => {
                 value={credentials.username}
                 onChange={handleChange}
                 required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={loading}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                 placeholder="Enter your username"
               />
             </div>
@@ -80,7 +87,8 @@ const EmployerLogin: React.FC = () => {
                 value={credentials.password}
                 onChange={handleChange}
                 required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={loading}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                 placeholder="Enter your password"
               />
             </div>
@@ -88,9 +96,17 @@ const EmployerLogin: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-2xl"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-2xl disabled:transform-none flex items-center justify-center space-x-2"
           >
-            Sign In
+            {loading ? (
+              <>
+                <Loader className="h-5 w-5 animate-spin" />
+                <span>Signing In...</span>
+              </>
+            ) : (
+              <span>Sign In</span>
+            )}
           </button>
         </form>
 

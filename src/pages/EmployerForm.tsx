@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, ArrowLeft, User, Building, Briefcase, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Save, ArrowLeft, User, Building, Briefcase, ToggleLeft, ToggleRight, Mail, Phone, Loader } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
-interface Employee {
-  id?: number;
-  name: string;
-  company: string;
-  designation: string;
-  status: 'Active' | 'Inactive';
-}
+import { getCurrentEmployer, createEmployee, updateEmployee, getEmployees, type Employee } from '../lib/supabase';
 
 const EmployerForm: React.FC = () => {
-  const [employee, setEmployee] = useState<Employee>({
+  const [employee, setEmployee] = useState({
     name: '',
     company: '',
     designation: '',
-    status: 'Active'
+    status: 'Active' as 'Active' | 'Inactive',
+    email: '',
+    phone: ''
   });
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [currentEmployer, setCurrentEmployer] = useState<any>(null);
   
   const navigate = useNavigate();
   const { id } = useParams();
@@ -26,29 +25,44 @@ const EmployerForm: React.FC = () => {
 
   useEffect(() => {
     // Check authentication
-    const isAuthenticated = localStorage.getItem('isEmployerAuthenticated');
-    if (!isAuthenticated) {
+    const employer = getCurrentEmployer();
+    if (!employer) {
       navigate('/employer-login');
       return;
     }
+    setCurrentEmployer(employer);
 
-    // If editing, load employee data (in real app, this would be an API call)
+    // If editing, load employee data
     if (isEdit && id) {
-      // Mock data for demo - in real app, fetch from API
-      const mockEmployees = [
-        { id: 1, name: 'John Doe', company: 'TechCorp', designation: 'Software Engineer', status: 'Active' as const },
-        { id: 2, name: 'Jane Smith', company: 'FinanceFirst', designation: 'Financial Analyst', status: 'Active' as const },
-        { id: 3, name: 'Mike Johnson', company: 'HealthTech', designation: 'Product Manager', status: 'Inactive' as const },
-        { id: 4, name: 'Sarah Wilson', company: 'MarketingPro', designation: 'Marketing Manager', status: 'Active' as const },
-        { id: 5, name: 'David Brown', company: 'ConsultCorp', designation: 'Business Analyst', status: 'Active' as const },
-      ];
-      
-      const foundEmployee = mockEmployees.find(emp => emp.id === parseInt(id));
-      if (foundEmployee) {
-        setEmployee(foundEmployee);
-      }
+      loadEmployee(employer.id, id);
     }
   }, [navigate, isEdit, id]);
+
+  const loadEmployee = async (employerId: string, employeeId: string) => {
+    try {
+      setLoading(true);
+      const employees = await getEmployees(employerId);
+      const foundEmployee = employees.find(emp => emp.id === employeeId);
+      
+      if (foundEmployee) {
+        setEmployee({
+          name: foundEmployee.name,
+          company: foundEmployee.company,
+          designation: foundEmployee.designation,
+          status: foundEmployee.status,
+          email: foundEmployee.email || '',
+          phone: foundEmployee.phone || ''
+        });
+      } else {
+        setError('Employee not found');
+      }
+    } catch (err) {
+      setError('Failed to load employee data');
+      console.error('Error loading employee:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setEmployee({
@@ -64,22 +78,54 @@ const EmployerForm: React.FC = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In real app, this would be an API call
-    console.log('Saving employee:', employee);
+    if (!currentEmployer) {
+      setError('Authentication required');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
     
-    // Show success message
-    alert(isEdit ? 'Employee updated successfully!' : 'Employee added successfully!');
-    
-    // Navigate back to dashboard
-    navigate('/employer-dashboard');
+    try {
+      if (isEdit && id) {
+        await updateEmployee(id, employee);
+      } else {
+        await createEmployee({
+          ...employee,
+          employer_id: currentEmployer.id
+        });
+      }
+      
+      navigate('/employer-dashboard');
+    } catch (err) {
+      setError(isEdit ? 'Failed to update employee' : 'Failed to create employee');
+      console.error('Error saving employee:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {
     navigate('/employer-dashboard');
   };
+
+  if (loading && isEdit) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <Loader className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading employee data...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -105,6 +151,12 @@ const EmployerForm: React.FC = () => {
             </div>
           </div>
 
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
+
           {/* Form */}
           <div className="bg-white rounded-lg shadow-lg p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -123,7 +175,8 @@ const EmployerForm: React.FC = () => {
                       value={employee.name}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={loading}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                       placeholder="Enter employee name"
                     />
                   </div>
@@ -143,7 +196,8 @@ const EmployerForm: React.FC = () => {
                       value={employee.company}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={loading}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                       placeholder="Enter company name"
                     />
                   </div>
@@ -163,7 +217,8 @@ const EmployerForm: React.FC = () => {
                       value={employee.designation}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={loading}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                       placeholder="Enter designation"
                     />
                   </div>
@@ -178,7 +233,8 @@ const EmployerForm: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleStatusToggle}
-                      className={`flex items-center space-x-2 px-4 py-3 rounded-lg border-2 transition-all duration-300 ${
+                      disabled={loading}
+                      className={`flex items-center space-x-2 px-4 py-3 rounded-lg border-2 transition-all duration-300 disabled:opacity-50 ${
                         employee.status === 'Active'
                           ? 'border-green-500 bg-green-50 text-green-700'
                           : 'border-red-500 bg-red-50 text-red-700'
@@ -193,33 +249,42 @@ const EmployerForm: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              </div>
 
-              {/* Additional Information Section */}
-              <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
-                    </label>
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                       type="email"
                       id="email"
                       name="email"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={employee.email}
+                      onChange={handleChange}
+                      disabled={loading}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                       placeholder="Enter email address"
                     />
                   </div>
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                       type="tel"
                       id="phone"
                       name="phone"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={employee.phone}
+                      onChange={handleChange}
+                      disabled={loading}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                       placeholder="Enter phone number"
                     />
                   </div>
@@ -231,16 +296,27 @@ const EmployerForm: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  disabled={loading}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105"
+                  disabled={loading}
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:transform-none"
                 >
-                  <Save className="h-5 w-5" />
-                  <span>{isEdit ? 'Update Employee' : 'Add Employee'}</span>
+                  {loading ? (
+                    <>
+                      <Loader className="h-5 w-5 animate-spin" />
+                      <span>{isEdit ? 'Updating...' : 'Adding...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-5 w-5" />
+                      <span>{isEdit ? 'Update Employee' : 'Add Employee'}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
