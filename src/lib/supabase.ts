@@ -38,20 +38,75 @@ export interface Employee {
   updated_at: string;
 }
 
+// Mock data storage
+const mockEmployers = [
+  {
+    id: '1',
+    username: 'employer',
+    password: 'admin123',
+    email: 'employer@hardskello.com',
+    company_name: 'Hardskello Inc.',
+    created_at: new Date().toISOString()
+  }
+];
+
+let mockEmployees: Employee[] = [
+  {
+    id: '1',
+    employer_id: '1',
+    name: 'John Doe',
+    company: 'TechCorp',
+    designation: 'Software Engineer',
+    status: 'Active',
+    email: 'john@techcorp.com',
+    phone: '+1-555-0123',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '2',
+    employer_id: '1',
+    name: 'Jane Smith',
+    company: 'FinanceFirst',
+    designation: 'Financial Analyst',
+    status: 'Active',
+    email: 'jane@financefirst.com',
+    phone: '+1-555-0124',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '3',
+    employer_id: '1',
+    name: 'Mike Johnson',
+    company: 'HealthTech',
+    designation: 'Product Manager',
+    status: 'Inactive',
+    email: 'mike@healthtech.com',
+    phone: '+1-555-0125',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
+// Simulate async delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Auth functions
 export const signInEmployer = async (username: string, password: string) => {
-  const { data, error } = await supabase
-    .from('employers')
-    .select('*')
-    .eq('username', username)
-    .eq('password', password)
-    .single();
+  await delay(500); // Simulate network delay
+  
+  const employer = mockEmployers.find(emp => 
+    emp.username === username && emp.password === password
+  );
 
-  if (error) {
+  if (!employer) {
     throw new Error('Invalid credentials');
   }
 
-  return data;
+  // Return employer without password
+  const { password: _, ...employerData } = employer;
+  return employerData;
 };
 
 export const getCurrentEmployer = () => {
@@ -69,55 +124,49 @@ export const signOutEmployer = () => {
 
 // Employee CRUD functions
 export const getEmployees = async (employerId: string) => {
-  const { data, error } = await supabase
-    .from('employees')
-    .select('*')
-    .eq('employer_id', employerId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  await delay(300); // Simulate network delay
+  
+  return mockEmployees.filter(emp => emp.employer_id === employerId);
 };
 
 export const createEmployee = async (employee: Omit<Employee, 'id' | 'created_at' | 'updated_at'>) => {
-  const { data, error } = await supabase
-    .from('employees')
-    .insert([employee])
-    .select()
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  await delay(500); // Simulate network delay
+  
+  const newEmployee: Employee = {
+    ...employee,
+    id: Date.now().toString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  
+  mockEmployees.push(newEmployee);
+  return newEmployee;
 };
 
 export const updateEmployee = async (id: string, employee: Partial<Employee>) => {
-  const { data, error } = await supabase
-    .from('employees')
-    .update({ ...employee, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) {
-    throw error;
+  await delay(500); // Simulate network delay
+  
+  const index = mockEmployees.findIndex(emp => emp.id === id);
+  if (index === -1) {
+    throw new Error('Employee not found');
   }
-
-  return data;
+  
+  mockEmployees[index] = {
+    ...mockEmployees[index],
+    ...employee,
+    updated_at: new Date().toISOString()
+  };
+  
+  return mockEmployees[index];
 };
 
 export const deleteEmployee = async (id: string) => {
-  const { error } = await supabase
-    .from('employees')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    throw error;
+  await delay(300); // Simulate network delay
+  
+  const index = mockEmployees.findIndex(emp => emp.id === id);
+  if (index === -1) {
+    throw new Error('Employee not found');
   }
+  
+  mockEmployees.splice(index, 1);
 };
