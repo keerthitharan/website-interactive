@@ -8,9 +8,9 @@ import StaffingExpertises from './pages/StaffingExpertises';
 import Employee from './pages/Employee';
 import Contact from './pages/Contact';
 import Employer from './pages/Employer';
-import EmployeeLogin from './pages/EmployeeLogin';
-import EmployeeDashboard from './pages/EmployeeDashboard';
-import EmployeeForm from './pages/EmployeeForm';
+import EmployerLogin from './pages/EmployerLogin';
+import EmployerDashboard from './pages/EmployerDashboard';
+import EmployerForm from './pages/EmployerForm';
 
 function App() {
   return (
@@ -73,11 +73,11 @@ function App() {
             </>
           } />
           
-          {/* Employee authentication and dashboard routes */}
-          <Route path="/employee-login" element={<EmployeeLogin />} />
-          <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
-          <Route path="/employee-form" element={<EmployeeForm />} />
-          <Route path="/employee-form/:id" element={<EmployeeForm />} />
+          {/* Employer authentication and dashboard routes */}
+          <Route path="/employer-login" element={<EmployerLogin />} />
+          <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+          <Route path="/employer-form" element={<EmployerForm />} />
+          <Route path="/employer-form/:id" element={<EmployerForm />} />
         </Routes>
       </div>
     </Router>
